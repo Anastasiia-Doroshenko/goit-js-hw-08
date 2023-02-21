@@ -1,38 +1,49 @@
 import throttle from 'lodash.throttle';
 
-const form = document.querySelector('.feedback-form');
-const userEmail = document.querySelector('input');
-const userMessage = document.querySelector('textarea');
+const feedbackForm = document.querySelector('.feedback-form');
+const FEEDBACK_FORM_STATE = 'feedback-form-state';
+let localObject = { email: ' ', message: ' ' };
 
-const userFeedback = {
-    email: '',
-    message: '',
+
+feedbackForm.addEventListener('input', throttle(localObjectRecord, 500));
+
+
+function localObjectRecord(event) {
+    event.preventDefault();
+
+    localObject[event.target.name] = event.target.value
+
+    console.log(JSON.stringify(localObject))
+
+    localStorage.setItem(FEEDBACK_FORM_STATE, JSON.stringify(localObject));
 };
 
-form.addEventListener('input', throttle(onFeedbackInput, 500));
+const dataLocalObject = localStorage.getItem(FEEDBACK_FORM_STATE);
 
-function onFeedbackInput(evt){
-    userFeedback[evt.target.name] = evt.target.value;
-    localStorage.setItem('feedback-form-state', JSON.stringify(userFeedback));
+
+function storageStatus(dataLocalObject) { 
+
+    if (!dataLocalObject) return
+    
+    try {
+       let localObject = JSON.parse(dataLocalObject);
+    Object.entries(localObject).forEach(([name, value]) => {
+        feedbackForm[name].value = value;
+     }) 
+    } catch (error) { }
+    
+        
 };
 
-form.addEventListener('submit', onFormSubmit);
+storageStatus(dataLocalObject);
 
-function onFormSubmit(evt){
-    evt.preventDefault();
-    evt.currentTarget.reset();
-    localStorage.removeItem('feedback-form-state');
-    console.log(userFeedback);
+feedbackForm.addEventListener('submit', submitButton);
+
+function submitButton(event) { 
+    event.preventDefault();
+
+    localObject = { email: ' ', message: ' ' };
+    event.target.reset();
+
+    localStorage.removeItem(FEEDBACK_FORM_STATE);
 }
-
-function fillInput(){
-    const savedInfo = localStorage.getItem('feedback-form-state');
-    const parsedInfo = JSON.parse(savedInfo);
-    if(savedInfo){
-        console.log(parsedInfo);
-        userEmail.value = parsedInfo.email;
-        userMessage.value = parsedInfo.message;
-    }
-};
-
-fillInput();
